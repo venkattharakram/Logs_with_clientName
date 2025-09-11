@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  log-listener:
+    build: ./log-listener
+    container_name: log-pipeline-log-listener
+    ports:
+      - "5001:5001"
+    environment:
+      - COLLECTOR_URL=http://23.22.65.92:5002/collect
+
+  log-generator:
+    build: ./log-generator
+    container_name: log-pipeline-log-generator
+    depends_on:
+      - log-listener
+    ports:
+      - "5000:5000"
+    environment:
+      - LISTENER_URL=http://log-listener:5001/logs
+      - CLIENT_NAME=vamsi's macbook   # ✅ human-friendly client name
