@@ -12,7 +12,8 @@ pipeline {
             steps {
                 script {
                     // run in detached mode so Jenkins doesn’t hang
-                    sh 'docker compose -f docker-compose.local.yml up =d'
+                    docker compose -f docker-compose.local.yml up -d
+
 
 
                 }
