@@ -57,7 +57,7 @@ pipeline {
                           if [ ! -d "/home/ubuntu/Logs_with_clientName" ]; then
                               git clone ${GIT_REPO}
                           fi &&
-                          cd /home/ec2-user/Logs_with_clientName &&
+                          cd /home/ubuntu/Logs_with_clientName &&
                           git pull origin master &&
 
                           # Replace build with image in docker-compose.cloud.yml
