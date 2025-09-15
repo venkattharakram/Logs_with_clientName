@@ -68,9 +68,9 @@ pipeline {
                           sed -i "s|build: ./persistor-application|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-application:$TAG|" docker-compose.cloud.yml
                           sed -i "s|build: ./log-ui|image: $DOCKERHUB_REPO/${APP_NAME}-log-ui:$TAG|" docker-compose.cloud.yml
 
-                          docker compose -f docker-compose.cloud.yml down
-                          docker compose -f docker-compose.cloud.yml pull
-                          docker compose -f docker-compose.cloud.yml up -d
+                          sudo docker compose -f docker-compose.cloud.yml down
+                          sudo docker compose -f docker-compose.cloud.yml pull
+                          sudo docker compose -f docker-compose.cloud.yml up -d
                         '
                     """
                 }
