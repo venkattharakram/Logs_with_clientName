@@ -80,9 +80,6 @@ pipeline {
 
     post {
         always {
-          script {
-            sh 'docker logout || true'
-            }
             echo "✅ Pipeline finished successfully!"
         }
     }
