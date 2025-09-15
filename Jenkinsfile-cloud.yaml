@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Jenkins creds (username+password)
+        DOCKERHUB_REPO = "tharak397"
+        APP_NAME = "log-monitoring"
+        TAG = "latest"
+        GIT_REPO = "https://github.com/venkattharakram/Logs_with_clientName.git"
+        EC2_HOST = "ec2-user@<EC2-IP>"   // change this to your EC2 public IP/DNS
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                sh """
+                  echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                """
+            }
+        }
+
+        stage('Build & Push Docker Images') {
+            steps {
+                script {
+                    // These are the services with build context in docker-compose.cloud.yml
+                    def services = [
+                        "log-collector",
+                        "persistor-auth",
+                        "persistor-payment",
+                        "persistor-system",
+                        "persistor-application",
+                        "log-ui"
+                    ]
+
+                    for (s in services) {
+                        sh """
+                          echo "🚀 Building image for ${s}"
+                          docker build -t $DOCKERHUB_REPO/${APP_NAME}-${s}:$TAG ${s}/
+                          docker push $DOCKERHUB_REPO/${APP_NAME}-${s}:$TAG
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sshagent (credentials: ['ec2-ssh-key']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${EC2_HOST} '
+                          if [ ! -d "/home/ec2-user/Logs_with_clientName" ]; then
+                              git clone ${GIT_REPO}
+                          fi &&
+                          cd /home/ec2-user/Logs_with_clientName &&
+                          git pull origin master &&
+
+                          # Replace build with image in docker-compose.cloud.yml
+                          sed -i "s|build: ./log-collector|image: $DOCKERHUB_REPO/${APP_NAME}-log-collector:$TAG|" docker-compose.cloud.yml
+                          sed -i "s|build: ./persistor-auth|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-auth:$TAG|" docker-compose.cloud.yml
+                          sed -i "s|build: ./persistor-payment|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-payment:$TAG|" docker-compose.cloud.yml
+                          sed -i "s|build: ./persistor-system|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-system:$TAG|" docker-compose.cloud.yml
+                          sed -i "s|build: ./persistor-application|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-application:$TAG|" docker-compose.cloud.yml
+                          sed -i "s|build: ./log-ui|image: $DOCKERHUB_REPO/${APP_NAME}-log-ui:$TAG|" docker-compose.cloud.yml
+
+                          docker compose -f docker-compose.cloud.yml down
+                          docker compose -f docker-compose.cloud.yml pull
+                          docker compose -f docker-compose.cloud.yml up -d
+                        '
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
+            echo "✅ Pipeline finished successfully!"
+        }
+    }
+}
