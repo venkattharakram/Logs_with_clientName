@@ -7,7 +7,7 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - COLLECTOR_URL=http://23.22.65.92:5002/collect
+      - COLLECTOR_URL=http://13.233.97.189:5002/collect
 
   log-generator:
     build: ./log-generator
