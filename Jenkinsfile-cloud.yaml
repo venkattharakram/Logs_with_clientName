@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Jenkins creds (username+password)
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Jenkins creds (username+password)
         DOCKERHUB_REPO = "tharak397"
         APP_NAME = "log-monitoring"
         TAG = "latest"
