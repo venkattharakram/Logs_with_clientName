@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Jenkins credential ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Jenkins credential ID
         DOCKERHUB_REPO = "tharak397"
         APP_NAME = "log-monitoring"
         TAG = "latest"   // you can also use "${env.BUILD_NUMBER}" for unique tags
