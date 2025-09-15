@@ -8,20 +8,16 @@ pipeline {
             }
         }
 
-         stage('Docker Compose build) {
-    steps {
-        sh 'docker compose -f docker-compose.local.yml up -d --build'
+        stage('Docker Compose Down') {
+            steps {
+                sh 'docker compose -f docker-compose.local.yml down'
+            }
+        }
 
-    }
-         }
-        stage('Docker Compose Up') {
-    steps {
-        sh 'docker compose -f docker-compose.local.yml up -d'
-    
-
-
-
-                }
+        stage('Docker Compose Build & Up') {
+            steps {
+                sh 'docker compose -f docker-compose.local.yml up -d --build'
             }
         }
     }
+}
