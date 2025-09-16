@@ -59,6 +59,7 @@ Pipeline 1 (Local Server) → Deploys log-monitoring-generator & log-monitoring-
 
 Pipeline 2 (Cloud EC2 Server) → Deploys log-collector, log-ui, and persistor services
 
+
 ☁️ Pipeline 2: Cloud Deployment
 📦 docker-compose.cloud.yml
 yaml
@@ -143,6 +144,10 @@ volumes:
   persistor-payment-data:
   persistor-system-data:
   persistor-application-data:
+
+
+
+
 📑 Jenkinsfile-cloud
 groovy
 Copy code
@@ -221,6 +226,8 @@ pipeline {
         }
     }
 }
+
+
 💻 Pipeline 1: Local Deployment
 📦 docker-compose.local.yml
 yaml
@@ -243,6 +250,8 @@ services:
     environment:
       - LISTENER_URL=http://log-listener:5001/logs
       - CLIENT_NAME=venkat's macbook
+
+
 📑 Jenkinsfile-local
 groovy
 Copy code
