@@ -1,37 +1,32 @@
-# 📘 Cisco Log Monitoring Project
+📘 Cisco Log Monitoring Project
+🛠️ Prerequisites and Setup
+Infrastructure
 
-This project demonstrates a complete **CI/CD pipeline** for log monitoring applications deployed across **on-premises (local Ubuntu server)** and **AWS EC2 Ubuntu instances**, using **Jenkins, Docker, and Docker Compose**.
+On-Premises Server → Ubuntu (Local Jenkins + Docker host)
 
----
+AWS Cloud Server → Ubuntu EC2 instance
 
-## 🛠️ Prerequisites and Setup
+✅ Jenkins Installation
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key \
+  | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
 
-### Infrastructure
-- **On-Premises Server** → Ubuntu (Local Jenkins + Docker host)
-- **AWS Cloud Server** → EC2 Ubuntu instance
-
----
-
-### ✅ Jenkins Installation
-```bash
-wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ \
+  | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
 
 sudo apt update
 sudo apt install jenkins -y
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
 
-### ✅Docker Installation
-bash
-Copy code
+✅ Docker Installation
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io -y
@@ -39,41 +34,33 @@ sudo apt install docker-ce docker-ce-cli containerd.io -y
 docker --version
 docker compose version
 
-
-
 🔀 Jenkins CI/CD Overview
 🔌 Required Plugins
+
 Docker Pipeline
+
 Pipeline
+
 SSH Agent
 
-
 🌐 Jenkins Credentials
+
 dockerhub-creds → Docker Hub credentials (username & password)
 
 ec2-ssh-key → SSH private key for EC2 access
 
 ubuntu → EC2 user credentials
 
-
-
-
 📄 CI/CD Pipelines
+
 The project uses two pipelines:
-Pipeline 1 (Cloud EC2 Server) → Deploys log-collector, log-ui, and persistor services
 
+Pipeline 1 (Local Server) → Deploys log-generator & log-listener
 
-Pipeline 2 (Local Server) → Deploys log-monitoring-generator & log-monitoring-listener
+Pipeline 2 (Cloud EC2 Server) → Deploys log-collector, log-ui, and persistor services
 
-
-
-☁️ Pipeline 2: Cloud Deploymen Deploys log-collector, log-ui, and persistor services
-
+☁️ Pipeline 2: Cloud Deployment
 📦 docker-compose.cloud.yml
-# docker-compose.cloud.yml
-# (No "version:" key to avoid the Compose deprecation warning)
-yaml
-Copy code
 services:
   postgres:
     image: postgres:15
@@ -155,12 +142,7 @@ volumes:
   persistor-system-data:
   persistor-application-data:
 
-
-
-
 📑 Jenkinsfile-cloud
-groovy
-Copy code
 pipeline {
     agent any
 
@@ -237,12 +219,8 @@ pipeline {
     }
 }
 
-
-
 💻 Pipeline 1: Local Deployment
 📦 docker-compose.local.yml
-yaml
-Copy code
 version: "3.8"
 services:
   log-listener:
@@ -262,10 +240,7 @@ services:
       - LISTENER_URL=http://log-listener:5001/logs
       - CLIENT_NAME=venkat's macbook
 
-
 📑 Jenkinsfile-local
-groovy
-Copy code
 pipeline {
     agent any
 
@@ -337,29 +312,31 @@ pipeline {
         }
     }
 }
+
 📊 Monitoring & UI
-Local Pipeline (Generator + Listener) sends logs → Cloud Pipeline (Collector + Persistors + Postgres)
 
-UI available at → http://<EC2-Public-IP>
+Local Pipeline (Generator + Listener) → Sends logs
 
-Collector API exposed at → http://<EC2-Public-IP>:5002/collect
+Cloud Pipeline (Collector + Persistors + Postgres) → Stores & visualizes logs
+
+UI → http://<EC2-Public-IP>
+
+Collector API → http://<EC2-Public-IP>:5002/collect
 
 📸 Screenshots
-Pipeline 1 Execution
 
+Pipeline 1 Execution
 
 Pipeline 2 Execution
 
-
 EC2 Running Containers
-
 
 Log Dashboard
 
-
 ✅ Summary
-Pipeline 1 (Local): Builds, pushes, and runs log-generator & log-listener
 
-Pipeline 2 (Cloud): Builds, pushes, and runs log-collector, log-ui, and persistor services on EC2
+Pipeline 1 (Local) → Builds, pushes, and runs log-generator & log-listener
 
-End-to-end log monitoring system with UI and database storage
+Pipeline 2 (Cloud) → Builds, pushes, and runs log-collector, log-ui, and persistor services on EC2
+
+End-to-end log monitoring system with UI and database storage 🚀
