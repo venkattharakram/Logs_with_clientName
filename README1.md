@@ -22,7 +22,8 @@ sudo apt update
 sudo apt install jenkins -y
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
-🐳 Docker Installation
+
+### ✅Docker Installation
 bash
 Copy code
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -37,13 +38,15 @@ sudo apt install docker-ce docker-ce-cli containerd.io -y
 
 docker --version
 docker compose version
+
+
+
 🔀 Jenkins CI/CD Overview
 🔌 Required Plugins
 Docker Pipeline
-
 Pipeline
-
 SSH Agent
+
 
 🌐 Jenkins Credentials
 dockerhub-creds → Docker Hub credentials (username & password)
@@ -52,16 +55,23 @@ ec2-ssh-key → SSH private key for EC2 access
 
 ubuntu → EC2 user credentials
 
+
+
+
 📄 CI/CD Pipelines
 The project uses two pipelines:
-
-Pipeline 1 (Local Server) → Deploys log-monitoring-generator & log-monitoring-listener
-
-Pipeline 2 (Cloud EC2 Server) → Deploys log-collector, log-ui, and persistor services
+Pipeline 1 (Cloud EC2 Server) → Deploys log-collector, log-ui, and persistor services
 
 
-☁️ Pipeline 2: Cloud Deployment
+Pipeline 2 (Local Server) → Deploys log-monitoring-generator & log-monitoring-listener
+
+
+
+☁️ Pipeline 2: Cloud Deploymen Deploys log-collector, log-ui, and persistor services
+
 📦 docker-compose.cloud.yml
+# docker-compose.cloud.yml
+# (No "version:" key to avoid the Compose deprecation warning)
 yaml
 Copy code
 services:
@@ -226,6 +236,7 @@ pipeline {
         }
     }
 }
+
 
 
 💻 Pipeline 1: Local Deployment
