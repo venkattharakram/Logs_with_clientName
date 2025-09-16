@@ -1,32 +1,32 @@
-📘 Cisco Log Monitoring Project
+📘 Cisco Log Monitoring – Project Documentation
 🛠️ Prerequisites and Setup
 Infrastructure
 
-On-Premises Server → Ubuntu (Local Jenkins + Docker host)
+On-Premises Server → Ubuntu
 
-AWS Cloud Server → Ubuntu EC2 instance
+AWS Cloud Server → EC2 Ubuntu instance
 
 ✅ Jenkins Installation
-wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key \
-  | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
 
 echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian-stable binary/ \
-  | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+/etc/apt/sources.list.d/jenkins.list > /dev/null
 
 sudo apt update
 sudo apt install jenkins -y
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
 
-✅ Docker Installation
+🐳 Docker Installation
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
-  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+echo "deb [arch=$(dpkg --print-architecture) \
+signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io -y
@@ -53,14 +53,15 @@ ubuntu → EC2 user credentials
 
 📄 CI/CD Pipelines
 
-The project uses two pipelines:
+Two pipelines are configured:
 
-Pipeline 1 (Local Server) → Deploys log-generator & log-listener
+Pipeline 1 (Local Server) → log-monitoring-generator & log-monitoring-listener
 
-Pipeline 2 (Cloud EC2 Server) → Deploys log-collector, log-ui, and persistor services
+Pipeline 2 (Cloud EC2 Server) → log-collector, log-ui, and all persistor services
 
-☁️ Pipeline 2: Cloud Deployment
+☁️ Pipeline 2 – Cloud Deployment
 📦 docker-compose.cloud.yml
+# docker-compose.cloud.yml
 services:
   postgres:
     image: postgres:15
@@ -88,14 +89,15 @@ services:
       - PERSISTOR_PORT=6000
     depends_on:
       - postgres
-    ports:
-      - "5002:5002"
     volumes:
       - collector-data:/data
+    ports:
+      - "5002:5002"
     restart: unless-stopped
 
   persistor-auth:
     build: ./persistor-auth
+    container_name: log-pipeline-persistor-auth
     environment:
       - STORE_FILE=/data/auth_logs.json
     volumes:
@@ -104,6 +106,7 @@ services:
 
   persistor-payment:
     build: ./persistor-payment
+    container_name: log-pipeline-persistor-payment
     environment:
       - STORE_FILE=/data/payment_logs.json
     volumes:
@@ -112,6 +115,7 @@ services:
 
   persistor-system:
     build: ./persistor-system
+    container_name: log-pipeline-persistor-system
     environment:
       - STORE_FILE=/data/system_logs.json
     volumes:
@@ -120,6 +124,7 @@ services:
 
   persistor-application:
     build: ./persistor-application
+    container_name: log-pipeline-persistor-application
     environment:
       - STORE_FILE=/data/application_logs.json
     volumes:
@@ -128,6 +133,7 @@ services:
 
   log-ui:
     build: ./log-ui
+    container_name: log-pipeline-log-ui
     ports:
       - "80:80"
     depends_on:
@@ -165,7 +171,8 @@ pipeline {
         stage('Docker Login') {
             steps {
                 sh """
-                  echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                  echo $DOCKERHUB_CREDENTIALS_PSW | \
+                  docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
                 """
             }
         }
@@ -173,9 +180,18 @@ pipeline {
         stage('Build & Push Docker Images') {
             steps {
                 script {
-                    def services = ["log-collector","persistor-auth","persistor-payment","persistor-system","persistor-application","log-ui"]
+                    def services = [
+                        "log-collector",
+                        "persistor-auth",
+                        "persistor-payment",
+                        "persistor-system",
+                        "persistor-application",
+                        "log-ui"
+                    ]
+
                     for (s in services) {
                         sh """
+                          echo "🚀 Building image for ${s}"
                           docker build -t $DOCKERHUB_REPO/${APP_NAME}-${s}:$TAG ${s}/
                           docker push $DOCKERHUB_REPO/${APP_NAME}-${s}:$TAG
                         """
@@ -219,12 +235,29 @@ pipeline {
     }
 }
 
-💻 Pipeline 1: Local Deployment
+🛠️ Pipeline Stages
+
+Checkout → Pull latest repo
+
+Docker Login → Authenticate to Docker Hub
+
+Build & Push Images → Collector, Persistors, UI
+
+Deploy to EC2 → SSH, update Compose, restart containers
+
+📷 Pipeline Execution
+
+
+📷 EC2 Running Containers
+(Pending screenshot)
+
+🖥️ Pipeline 1 – Local Deployment
 📦 docker-compose.local.yml
 version: "3.8"
 services:
   log-listener:
     build: ./log-listener
+    container_name: log-pipeline-log-listener
     ports:
       - "5001:5001"
     environment:
@@ -232,6 +265,7 @@ services:
 
   log-generator:
     build: ./log-generator
+    container_name: log-pipeline-log-generator
     depends_on:
       - log-listener
     ports:
@@ -261,7 +295,8 @@ pipeline {
         stage('Docker Login') {
             steps {
                 sh """
-                echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                echo $DOCKERHUB_CREDENTIALS_PSW | \
+                docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
                 """
             }
         }
@@ -277,10 +312,8 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                script {
-                    sh "docker push $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG"
-                    sh "docker push $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG"
-                }
+                sh "docker push $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG"
+                sh "docker push $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG"
             }
         }
 
@@ -313,30 +346,29 @@ pipeline {
     }
 }
 
-📊 Monitoring & UI
+🛠️ Pipeline Stages
 
-Local Pipeline (Generator + Listener) → Sends logs
+Checkout → Pull GitHub repo
 
-Cloud Pipeline (Collector + Persistors + Postgres) → Stores & visualizes logs
+Docker Login → Authenticate to Docker Hub
 
-UI → http://<EC2-Public-IP>
+Build & Tag Images → Listener & Generator
 
-Collector API → http://<EC2-Public-IP>:5002/collect
+Push Images → Push to Docker Hub
 
-📸 Screenshots
+Update Compose File → Replace build: with image:
 
-Pipeline 1 Execution
+Deploy → Restart containers
 
-Pipeline 2 Execution
+📷 Pipeline Execution
 
-EC2 Running Containers
 
-Log Dashboard
+📷 Running Docker Containers
 
-✅ Summary
 
-Pipeline 1 (Local) → Builds, pushes, and runs log-generator & log-listener
+📷 Log Dashboard
 
-Pipeline 2 (Cloud) → Builds, pushes, and runs log-collector, log-ui, and persistor services on EC2
 
-End-to-end log monitoring system with UI and database storage 🚀
+✅ End of Documentation
+
+Would you like me to also add a project workflow diagram (CI/CD + data flow from generator → listener → collector → persistors → UI) so the README looks even more professional?
