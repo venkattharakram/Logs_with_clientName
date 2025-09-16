@@ -70,12 +70,12 @@ docker compose version
 
 We maintain **two pipelines**:
 
-1. **Pipeline 1 (Local Server)** → `log-monitoring-generator` & `log-monitoring-listener`
-2. **Pipeline 2 (Cloud EC2 Server)** → `log-collector`, `log-ui`, and all `persistor` services
+1. **Pipeline 1 (Cloud EC2 Server)** → `log-collector`, `log-ui`, and all `persistor` services
+2. **Pipeline 2 (Local Server)** → `log-monitoring-generator` & `log-monitoring-listener`
 
 ---
 
-## ☁️ Pipeline 2 – Cloud Deployment
+## ☁️ Pipeline 1 – Cloud Deployment
 
 ### 📦 `docker-compose.cloud.yml`
 
@@ -169,7 +169,7 @@ volumes:
 
 ---
 
-### 📑 Jenkinsfile – Cloud
+### 📑 Jenkinsfile-cloud.yaml
 
 ```groovy
 pipeline {
@@ -268,12 +268,15 @@ pipeline {
 * **Build & Push Images** → Collector, Persistors, UI
 * **Deploy to EC2** → SSH, update Compose, restart containers
 
-📷 *Pipeline Execution*
+<img width="1920" height="1080" alt="Screenshot from 2025-09-16 15-46-48" src="https://github.com/user-attachments/assets/0eab32b4-9809-45cd-83dd-aeb33701054d" />
+
+
 📷 *EC2 Running Containers* (Pending screenshot)
 
----
+<img width="1920" height="1080" alt="image (1)" src="https://github.com/user-attachments/assets/0c82b910-ee09-44f8-bef0-22a1222b5bb3" />
 
-## 🖥️ Pipeline 1 – Local Deployment
+
+## 🖥️ Pipeline 2 – Local Deployment
 
 ### 📦 `docker-compose.local.yml`
 
@@ -388,7 +391,18 @@ pipeline {
 * **Update Compose File** → Replace `build:` with `image:`
 * **Deploy** → Restart containers
 
-📷 *Pipeline Execution*
+* <img width="1920" height="1080" alt="Screenshot from 2025-09-16 15-49-03" src="https://github.com/user-attachments/assets/cbe3cd37-7644-4e1c-8dde-2dcfd287f342" />
+
 📷 *Running Docker Containers*
+
+<img width="1920" height="1080" alt="Screenshot from 2025-09-16 15-49-41" src="https://github.com/user-attachments/assets/93558f65-6189-4292-a27f-4272ae1644b4" />
+
+📷 DockerHub Dashboard*
+
+<img width="1920" height="1080" alt="Screenshot from 2025-09-16 15-51-02" src="https://github.com/user-attachments/assets/39398ab3-e4d7-4674-ab5f-f475a98dd595" />
+
+
 📷 *Log Dashboard*
+<img width="1920" height="1080" alt="Screenshot from 2025-09-16 15-50-07" src="https://github.com/user-attachments/assets/479d4464-c979-4b45-9423-d0400dbec6d2" />
+
 
