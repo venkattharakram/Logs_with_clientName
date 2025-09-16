@@ -63,8 +63,6 @@ Pipeline 1
 📦 docker-compose.cloud.yml
 
 # docker-compose.cloud.yml
-# (No "version:" key to avoid the Compose deprecation warning)
-
 services:
   postgres:
     image: postgres:15
@@ -268,7 +266,8 @@ Cloud pipeline execution
 
 EC2 running containers
 
-Pending 
+<img width="1920" height="1080" alt="image (1)" src="https://github.com/user-attachments/assets/27588059-c03f-4be4-9d5c-0815ab38d00e" />
+
 
 
 
