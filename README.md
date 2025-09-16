@@ -1,6 +1,4 @@
-📘 Cisco Log Monitoring  Project Documentation
-
-
+Cisco Log Monitoring – Project Documentation
 🛠️ Prerequisites and Setup
 Infrastructure
 
@@ -11,7 +9,9 @@ AWS Cloud Server → EC2 Ubuntu instance
 ✅ Jenkins Installation
 wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
 
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+/etc/apt/sources.list.d/jenkins.list > /dev/null
 
 sudo apt update
 sudo apt install jenkins -y
@@ -20,9 +20,13 @@ sudo systemctl enable jenkins
 
 🐳 Docker Installation
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+echo "deb [arch=$(dpkg --print-architecture) \
+signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io -y
@@ -55,15 +59,9 @@ Pipeline 1 (Local Server) → log-monitoring-generator & log-monitoring-listener
 
 Pipeline 2 (Cloud EC2 Server) → log-collector, log-ui, and all persistor services
 
-Pipeline 1
-<img width="1920" height="1080" alt="Screenshot from 2025-09-16 14-19-32" src="https://github.com/user-attachments/assets/9f882ba4-821d-4270-9ebe-5e5e1b35912c" />
-
-
+☁️ Pipeline 2 – Cloud Deployment
 📦 docker-compose.cloud.yml
-
 # docker-compose.cloud.yml
-# (No "version:" key to avoid the Compose deprecation warning)
-
 services:
   postgres:
     image: postgres:15
@@ -84,7 +82,6 @@ services:
       - POSTGRES_DB=logsdb
       - POSTGRES_USER=logs_user
       - POSTGRES_PASSWORD=logs_pass
-      # Persistor hostnames (if collector needs to call them)
       - PERSISTOR_AUTH=persistor-auth
       - PERSISTOR_PAYMENT=persistor-payment
       - PERSISTOR_SYSTEM=persistor-system
@@ -95,7 +92,7 @@ services:
     volumes:
       - collector-data:/data
     ports:
-      - "5002:5002"    # expose collector to the internet (EC2)
+      - "5002:5002"
     restart: unless-stopped
 
   persistor-auth:
@@ -137,9 +134,8 @@ services:
   log-ui:
     build: ./log-ui
     container_name: log-pipeline-log-ui
-    # UI calls /api/* (nginx proxy in log-ui will forward to log-collector)
     ports:
-      - "80:80"        # UI available on EC2 public IP:80
+      - "80:80"
     depends_on:
       - log-collector
     restart: unless-stopped
@@ -152,18 +148,17 @@ volumes:
   persistor-system-data:
   persistor-application-data:
 
-
 📑 Jenkinsfile-cloud
 pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Jenkins creds (username+password)
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         DOCKERHUB_REPO = "tharak397"
         APP_NAME = "log-monitoring"
         TAG = "latest"
         GIT_REPO = "https://github.com/venkattharakram/Logs_with_clientName.git"
-        EC2_HOST = "ubuntu@13.201.64.104"   // change this to your EC2 public IP/DNS
+        EC2_HOST = "ubuntu@13.201.64.104"
     }
 
     stages {
@@ -176,7 +171,8 @@ pipeline {
         stage('Docker Login') {
             steps {
                 sh """
-                  echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                  echo $DOCKERHUB_CREDENTIALS_PSW | \
+                  docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
                 """
             }
         }
@@ -184,7 +180,6 @@ pipeline {
         stage('Build & Push Docker Images') {
             steps {
                 script {
-                    // These are the services with build context in docker-compose.cloud.yml
                     def services = [
                         "log-collector",
                         "persistor-auth",
@@ -216,7 +211,6 @@ pipeline {
                           cd /home/ubuntu/Logs_with_clientName &&
                           git pull origin master &&
 
-                          # Replace build with image in docker-compose.cloud.yml
                           sed -i "s|build: ./log-collector|image: $DOCKERHUB_REPO/${APP_NAME}-log-collector:$TAG|" docker-compose.cloud.yml
                           sed -i "s|build: ./persistor-auth|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-auth:$TAG|" docker-compose.cloud.yml
                           sed -i "s|build: ./persistor-payment|image: $DOCKERHUB_REPO/${APP_NAME}-persistor-payment:$TAG|" docker-compose.cloud.yml
@@ -249,31 +243,15 @@ Docker Login → Authenticate to Docker Hub
 
 Build & Push Images → Collector, Persistors, UI
 
-Deploy to EC2 → SSH into server, update Compose, restart containers
+Deploy to EC2 → SSH, update Compose, restart containers
 
-🛠️ Pipeline Stages
-
-Checkout → Pull latest repo
-
-Docker Login → Authenticate to Docker Hub
-
-Build & Push Images → Collector, Persistors, UI
-
-Deploy to EC2 → SSH into server, update Compose, restart containers
-
-Cloud pipeline execution
-<img width="1920" height="1080" alt="Screenshot from 2025-09-16 14-22-40" src="https://github.com/user-attachments/assets/99ed3ba3-b879-48be-97e0-45e04b864c1c" />
+📷 Pipeline Execution
 
 
-EC2 running containers
+📷 EC2 Running Containers
+(Pending screenshot)
 
-Pending 
-
-
-
-☁️ Pipeline 2: local Deployment
-<img width="1920" height="1080" alt="Screenshot from 2025-09-16 14-23-55" src="https://github.com/user-attachments/assets/cd057371-2c66-4ddb-a54b-07dafbb2bb64" />
-
+🖥️ Pipeline 1 – Local Deployment
 📦 docker-compose.local.yml
 version: "3.8"
 services:
@@ -297,15 +275,14 @@ services:
       - CLIENT_NAME=venkat's macbook
 
 📑 Jenkinsfile-local
-
 pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Jenkins credential ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         DOCKERHUB_REPO = "tharak397"
         APP_NAME = "log-monitoring"
-        TAG = "latest"   // you can also use "${env.BUILD_NUMBER}" for unique tags
+        TAG = "latest"
     }
 
     stages {
@@ -318,7 +295,8 @@ pipeline {
         stage('Docker Login') {
             steps {
                 sh """
-                echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                echo $DOCKERHUB_CREDENTIALS_PSW | \
+                docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
                 """
             }
         }
@@ -326,37 +304,25 @@ pipeline {
         stage('Build & Tag Docker Images') {
             steps {
                 script {
-                    // Build log-listener
-                    sh """
-                    docker build -t $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG ./log-listener
-                    """
-
-                    // Build log-generator
-                    sh """
-                    docker build -t $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG ./log-generator
-                    """
+                    sh "docker build -t $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG ./log-listener"
+                    sh "docker build -t $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG ./log-generator"
                 }
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                script {
-                    sh "docker push $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG"
-                    sh "docker push $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG"
-                }
+                sh "docker push $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG"
+                sh "docker push $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG"
             }
         }
 
         stage('Update Docker Compose') {
             steps {
-                script {
-                    // Replace local build with DockerHub images dynamically
-                    sh """
-                    sed -i 's|build: ./log-listener|image: $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG|' docker-compose.local.yml
-                    sed -i 's|build: ./log-generator|image: $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG|' docker-compose.local.yml
-                    """
-                }
+                sh """
+                sed -i 's|build: ./log-listener|image: $DOCKERHUB_REPO/${APP_NAME}-listener:$TAG|' docker-compose.local.yml
+                sed -i 's|build: ./log-generator|image: $DOCKERHUB_REPO/${APP_NAME}-generator:$TAG|' docker-compose.local.yml
+                """
             }
         }
 
@@ -381,30 +347,23 @@ pipeline {
 }
 
 🛠️ Pipeline Stages
-Checkout → Pull latest GitHub repo
+
+Checkout → Pull GitHub repo
 
 Docker Login → Authenticate to Docker Hub
 
-Build & Tag Images → Build listener & generator
+Build & Tag Images → Listener & Generator
 
 Push Images → Push to Docker Hub
 
 Update Compose File → Replace build: with image:
 
-Deploy → Restart containers with new images
+Deploy → Restart containers
 
-Pipeline execution stages
-<img width="1920" height="1080" alt="Screenshot from 2025-09-16 14-11-36" src="https://github.com/user-attachments/assets/dea502e8-a703-430d-b768-b45e71185427" />
-
-
-Running Docker containers
-<img width="1920" height="1080" alt="Screenshot from 2025-09-16 14-12-04" src="https://github.com/user-attachments/assets/7a6cf4c4-3182-4cde-97cd-68f07363ac4b" />
+📷 Pipeline Execution
 
 
-Log Dashboard
-<img width="1920" height="1080" alt="Screenshot from 2025-09-16 14-12-26" src="https://github.com/user-attachments/assets/785f526d-378f-4271-a6f1-660cf813994a" />
+📷 Running Docker Containers
 
 
-
-
-
+📷 Log Dashboard
