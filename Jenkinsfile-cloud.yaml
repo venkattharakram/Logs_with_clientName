@@ -7,7 +7,7 @@ pipeline {
         APP_NAME = "log-monitoring"
         TAG = "latest"
         GIT_REPO = "https://github.com/venkattharakram/Logs_with_clientName.git"
-        EC2_HOST = "ubuntu@13.201.64.104"   // change this to your EC2 public IP/DNS
+        EC2_HOST = "ubuntu@13.233.107.162"   // change this to your EC2 public IP/DNS
     }
 
     stages {
