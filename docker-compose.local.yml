@@ -7,7 +7,7 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - COLLECTOR_URL=http://13.201.64.104:5002/collect
+      - COLLECTOR_URL=http://172.17.0.1:5002/collect
 
   log-generator:
     build: ./log-generator
@@ -18,4 +18,4 @@ services:
       - "5000:5000"
     environment:
       - LISTENER_URL=http://log-listener:5001/logs
-      - CLIENT_NAME=venkat's macbook   # ✅ human-friendly client name
+      - CLIENT_NAME=Venkat Laptop  # ✅ human-friendly client name
